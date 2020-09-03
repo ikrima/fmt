@@ -8,8 +8,8 @@
 #ifndef FMT_CORE_H_
 #define FMT_CORE_H_
 
-#include "ES2/ES2Core.h"
-#include "ES2/Debug/ES2Asserts.h"
+#include "ES2Core/ES2Core.h"
+#include "ES2Core/Debug/ES2Asserts.h"
 
 #include <cstdio>  // std::FILE
 #include <cstring>
