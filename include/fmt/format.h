@@ -2347,7 +2347,7 @@ template <typename Char> struct arg_ref {
 
   arg_id_kind kind;
   union value {
-    FMT_CONSTEXPR value(int id = 0) : index{id} {}
+    FMT_SUPPRESS_MSC_WARNING(4582) FMT_CONSTEXPR value(int id = 0) : index{id} {}
     FMT_CONSTEXPR value(basic_string_view<Char> n) : name(n) {}
 
     int index;
