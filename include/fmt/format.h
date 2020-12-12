@@ -890,7 +890,7 @@ struct FMT_EXTERN_TEMPLATE_API uint128_wrapper {
   uint64_t high_;
   uint64_t low_;
 
-  uint128_wrapper(uint64_t high, uint64_t low) FMT_NOEXCEPT : high_{high},
+  FMT_CONSTEXPR uint128_wrapper(uint64_t high, uint64_t low) FMT_NOEXCEPT : high_{high},
                                                               low_{low} {}
 
   uint64_t high() const FMT_NOEXCEPT { return high_; }
