@@ -5,19 +5,13 @@
 //
 // For the license information refer to format.h.
 
-#include <stdint.h>
-
-#include <cctype>
-#include <cfloat>
-#include <climits>
-#include <cmath>
-#include <cstring>
-#include <deque>
-#include <list>
-#include <memory>
 #include <string>
+#include <type_traits>
+#if __cplusplus >= 202002L
+#  include <string_view>
+#endif
 
-// Check if fmt/compile.h compiles with windows.h included before it.
+// Check that fmt/compile.h compiles with windows.h included before it.
 #ifdef _WIN32
 #  include <windows.h>
 #endif
@@ -25,15 +19,7 @@
 #include "fmt/compile.h"
 #include "gmock.h"
 #include "gtest-extra.h"
-#include "mock-allocator.h"
 #include "util.h"
-
-#undef ERROR
-#undef min
-#undef max
-
-using testing::Return;
-using testing::StrictMock;
 
 // compiletime_prepared_parts_type_provider is useful only with relaxed
 // constexpr.
@@ -149,6 +135,10 @@ TEST(CompileTest, FormatDefault) {
   EXPECT_EQ("foo", fmt::format(FMT_COMPILE("{}"), test_formattable()));
 }
 
+TEST(CompileTest, FormatWideString) {
+  EXPECT_EQ(L"42", fmt::format(FMT_COMPILE(L"{}"), 42));
+}
+
 TEST(CompileTest, FormatSpecs) {
   EXPECT_EQ("42", fmt::format(FMT_COMPILE("{:x}"), 0x42));
 }
@@ -163,10 +153,76 @@ TEST(CompileTest, FormatTo) {
   auto end = fmt::format_to(buf, FMT_COMPILE("{}"), 42);
   *end = '\0';
   EXPECT_STREQ("42", buf);
+  end = fmt::format_to(buf, FMT_COMPILE("{:x}"), 42);
+  *end = '\0';
+  EXPECT_STREQ("2a", buf);
+}
+
+TEST(CompileTest, FormatToNWithCompileMacro) {
+  constexpr auto buffer_size = 8;
+  char buffer[buffer_size];
+  auto res = fmt::format_to_n(buffer, buffer_size, FMT_COMPILE("{}"), 42);
+  *res.out = '\0';
+  EXPECT_STREQ("42", buffer);
+  res = fmt::format_to_n(buffer, buffer_size, FMT_COMPILE("{:x}"), 42);
+  *res.out = '\0';
+  EXPECT_STREQ("2a", buffer);
 }
 
 TEST(CompileTest, TextAndArg) {
   EXPECT_EQ(">>>42<<<", fmt::format(FMT_COMPILE(">>>{}<<<"), 42));
   EXPECT_EQ("42!", fmt::format(FMT_COMPILE("{}!"), 42));
+}
+
+TEST(CompileTest, Empty) {
+  EXPECT_EQ("", fmt::format(FMT_COMPILE("")));
+}
+#endif
+
+#if FMT_USE_NONTYPE_TEMPLATE_PARAMETERS
+TEST(CompileTest, CompileFormatStringLiteral) {
+  using namespace fmt::literals;
+  EXPECT_EQ("", fmt::format(""_cf));
+  EXPECT_EQ("42", fmt::format("{}"_cf, 42));
+}
+#endif
+
+#if __cplusplus >= 202002L
+template <size_t max_string_length> struct test_string {
+  template <typename T> constexpr bool operator==(const T& rhs) const noexcept {
+    return (std::string_view(rhs).compare(buffer.data()) == 0);
+  }
+  std::array<char, max_string_length> buffer{};
+};
+
+template <size_t max_string_length, typename... Args>
+consteval auto test_format(auto format, const Args&... args) {
+  test_string<max_string_length> string{};
+  fmt::format_to(string.buffer.data(), format, args...);
+  return string;
+}
+
+TEST(CompileTimeFormattingTest, Bool) {
+  EXPECT_EQ("true", test_format<5>(FMT_COMPILE("{}"), true));
+  EXPECT_EQ("false", test_format<6>(FMT_COMPILE("{}"), false));
+}
+
+TEST(CompileTimeFormattingTest, Integer) {
+  EXPECT_EQ("42", test_format<3>(FMT_COMPILE("{}"), 42));
+  EXPECT_EQ("420", test_format<4>(FMT_COMPILE("{}"), 420));
+  EXPECT_EQ("42 42", test_format<6>(FMT_COMPILE("{} {}"), 42, 42));
+  EXPECT_EQ("42 42",
+            test_format<6>(FMT_COMPILE("{} {}"), uint32_t{42}, uint64_t{42}));
+}
+
+TEST(CompileTimeFormattingTest, String) {
+  EXPECT_EQ("42", test_format<3>(FMT_COMPILE("{}"), "42"));
+  EXPECT_EQ("The answer is 42",
+            test_format<17>(FMT_COMPILE("{} is {}"), "The answer", "42"));
+}
+
+TEST(CompileTimeFormattingTest, Combination) {
+  EXPECT_EQ("420, true, answer",
+            test_format<18>(FMT_COMPILE("{}, {}, {}"), 420, true, "answer"));
 }
 #endif

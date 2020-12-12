@@ -15,7 +15,7 @@ Building the Library
 
 The included `CMake build script`__ can be used to build the fmt
 library on a wide range of platforms. CMake is freely available for
-download from http://www.cmake.org/download/.
+download from https://www.cmake.org/download/.
 
 __ https://github.com/fmtlib/fmt/blob/master/CMakeLists.txt
 
@@ -50,7 +50,15 @@ To build a `shared library`__ set the ``BUILD_SHARED_LIBS`` CMake variable to
 
   cmake -DBUILD_SHARED_LIBS=TRUE ...
 
-__ http://en.wikipedia.org/wiki/Library_%28computing%29#Shared_libraries
+__ https://en.wikipedia.org/wiki/Library_%28computing%29#Shared_libraries
+
+
+To build a `static library` with position independent code (required if the main
+consumer of the fmt library is a shared library i.e. a Python extension) set the
+``CMAKE_POSITION_INDEPENDENT_CODE`` CMake variable to ``TRUE``::
+
+  cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE ...
+
 
 Installing the Library
 ======================
@@ -173,6 +181,18 @@ The fmt port in vcpkg is kept up to date by Microsoft team members and community
 contributors. If the version is out of date, please `create an issue or pull
 request <https://github.com/Microsoft/vcpkg>`__ on the vcpkg repository.
 
+LHelper
+=======
+
+You can download and install fmt using
+`lhelper <https://github.com/franko/lhelper>`__ dependency manager::
+
+  lhelper activate <some-environment>
+  lhelper install fmt
+
+All the recipes for lhelper are kept in the
+`lhelper's recipe <https://github.com/franko/lhelper-recipes>`__ repository.
+
 Android NDK
 ===========
 
@@ -182,11 +202,11 @@ For an example of using fmt with Android NDK, see the
 `android-ndk-example <https://github.com/fmtlib/android-ndk-example>`_
 repository.
 
-__ https://github.com/fmtlib/fmt/blob/master/Android.mk
+__ https://github.com/fmtlib/fmt/blob/master/support/Android.mk
 
 Homebrew
 ========
 
-fmt can be installed on OS X using `Homebrew <http://brew.sh/>`_::
+fmt can be installed on OS X using `Homebrew <https://brew.sh/>`_::
 
   brew install fmt

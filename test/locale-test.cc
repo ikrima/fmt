@@ -52,6 +52,7 @@ TEST(LocaleTest, Format) {
   EXPECT_EQ("1234567", fmt::format(std::locale(), "{:L}", 1234567));
   EXPECT_EQ("1~234~567", fmt::format(loc, "{:L}", 1234567));
   EXPECT_EQ("-1~234~567", fmt::format(loc, "{:L}", -1234567));
+  EXPECT_EQ("-256", fmt::format(loc, "{:L}", -256));
   fmt::format_arg_store<fmt::format_context, int> as{1234567};
   EXPECT_EQ("1~234~567", fmt::vformat(loc, "{:L}", fmt::format_args(as)));
   std::string s;
@@ -114,7 +115,7 @@ template <class charT> struct formatter<std::complex<double>, charT> {
   detail::dynamic_format_specs<char> specs_;
 
  public:
-  typename basic_format_parse_context<charT>::iterator parse(
+  FMT_CONSTEXPR typename basic_format_parse_context<charT>::iterator parse(
       basic_format_parse_context<charT>& ctx) {
     using handler_type =
         detail::dynamic_specs_handler<basic_format_parse_context<charT>>;
@@ -130,15 +131,13 @@ template <class charT> struct formatter<std::complex<double>, charT> {
                                           FormatContext& ctx) {
     detail::handle_dynamic_spec<detail::precision_checker>(
         specs_.precision, specs_.precision_ref, ctx);
-    auto format_specs = std::string();
-    if (specs_.precision > 0)
-      format_specs = fmt::format(".{}", specs_.precision);
-    if (specs_.type)
-      format_specs += specs_.type;
+    auto specs = std::string();
+    if (specs_.precision > 0) specs = fmt::format(".{}", specs_.precision);
+    if (specs_.type) specs += specs_.type;
     auto real = fmt::format(ctx.locale().template get<std::locale>(),
-                            "{:" + format_specs + "}", c.real());
+                            "{:" + specs + "}", c.real());
     auto imag = fmt::format(ctx.locale().template get<std::locale>(),
-                            "{:" + format_specs + "}", c.imag());
+                            "{:" + specs + "}", c.imag());
     auto fill_align_width = std::string();
     if (specs_.width > 0)
       fill_align_width = fmt::format(">{}", specs_.width);
@@ -151,10 +150,9 @@ FMT_END_NAMESPACE
 
 TEST(FormatTest, Complex) {
   std::string s = fmt::format("{}", std::complex<double>(1, 2));
-  // We might want to drop trailing zeros for consistency with to_chars.
-  EXPECT_EQ(s, "(1.0+2.0i)");
+  EXPECT_EQ(s, "(1+2i)");
   EXPECT_EQ(fmt::format("{:.2f}", std::complex<double>(1, 2)), "(1.00+2.00i)");
-  EXPECT_EQ(fmt::format("{:12}", std::complex<double>(1, 2)), "  (1.0+2.0i)");
+  EXPECT_EQ(fmt::format("{:8}", std::complex<double>(1, 2)), "  (1+2i)");
 }
 
 #endif  // FMT_STATIC_THOUSANDS_SEPARATOR
