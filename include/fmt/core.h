@@ -7,8 +7,10 @@
 
 #ifndef FMT_CORE_H_
 #define FMT_CORE_H_
- 
-#include "es2core/debug/es2assertmacros.h"
+
+#ifdef FMT_USER_CONFIG
+ #include FMT_USER_CONFIG
+#endif
 
 #include <cstdio>  // std::FILE
 #include <cstring>
